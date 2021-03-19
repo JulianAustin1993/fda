@@ -16,7 +16,8 @@ class packageTest extends FunSuite {
 
   test("testJitChol") {
     val X = DenseMatrix((1.0, 0.0), (0.0, 0.0))
-    val L = jitChol(X, jit_max = 1e-12)
+    val L = jitChol(X, jit_max = 1e-8)
+    println(L)
     assert(allClose(L, cholesky(DenseMatrix((1.0, 0.0), (0.0, 1e-18)))))
   }
 
@@ -53,6 +54,14 @@ class packageTest extends FunSuite {
     val x = DenseVector.rand[Double](5)
     val b = A * x
     assert(isClose(choSolve(cholesky(A), b.toDenseMatrix.t).toDenseVector, x))
+  }
+
+  test("testChoSolve Single RHS") {
+    val sqrtA = DenseMatrix.rand[Double](5, 5)
+    val A = sqrtA.t * sqrtA
+    val x = DenseVector.rand[Double](5)
+    val b = A * x
+    assert(isClose(choSolve(cholesky(A), b), x))
   }
 
   test("testColumnKron") {

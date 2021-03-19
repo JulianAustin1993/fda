@@ -1,11 +1,13 @@
 ThisBuild / organization := "org.me"
-ThisBuild / version      := "0.1-SNAPSHOT"
+ThisBuild / version := "0.1-SNAPSHOT"
 
 name := "fda"
 
 scalaVersion := "2.13.5"
 
 idePackagePrefix := Some("fda")
+
+scalacOptions += "-deprecation"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % Test
 

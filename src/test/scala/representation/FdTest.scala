@@ -1,9 +1,9 @@
 package fda
 package representation
 
-import breeze.linalg.{DenseVector, kron, linspace, sum}
-import fda.basis.Bspline
-import fda.math.linalg.allClose
+import basis.Bspline
+
+import breeze.linalg.{DenseVector, kron, linspace}
 import org.scalatest.FunSuite
 
 class FdTest extends FunSuite {
@@ -16,9 +16,9 @@ class FdTest extends FunSuite {
     sigma2 = 0.1,
     nSubjects = 2000,
     nRegular = 32,
-    sparsity = (8, 16))
+    sparsity = (8, 32))
   val meanBs = Bspline(domain, 30, 4)
-  val marginalCovBs = Bspline(domain, 25, 4)
+  val marginalCovBs = Bspline(domain, 16, 4)
   val x = linspace(domain._1, domain._2, 32)
   val Phi = meanBs.designMatrix(x, 0)
 

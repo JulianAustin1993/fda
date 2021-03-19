@@ -1,13 +1,13 @@
 package fda
 package math
 
-import breeze.linalg.{Axis, DenseMatrix, DenseVector, NotConvergedException, diag, isClose, kron, lowerTriangular, max, qr, sum, svd}
-import breeze.numerics.abs
+import breeze.linalg.{Axis, DenseMatrix, DenseVector, NotConvergedException, diag, kron, lowerTriangular, max, qr, sum, svd}
+import breeze.numerics.{abs, log}
 import breeze.stats.mean
-import org.netlib.util.intW
-import spire.implicits.cfor
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
+import org.netlib.util.intW
+import spire.implicits.cfor
 
 import scala.annotation.tailrec
 
@@ -41,6 +41,22 @@ package object linalg {
   }
 
   /**
+   * Forwardsolve an Lower-triangular linear system
+   * with a single RHS
+   *
+   * @param A An lower-triangular matrix
+   * @param y A single vector RHS
+   * @return The solution, x, of the linear system A x = y
+   */
+  def forwardSolve(A: DenseMatrix[Double],
+                   y: DenseVector[Double]): DenseVector[Double] = {
+    val yc = y.copy
+    blas.dtrsv("L", "N", "N", A.cols, A.toArray,
+      A.rows, yc.data, 1)
+    yc
+  }
+
+  /**
    * Backsolve an upper-triangular linear system
    * with multiple RHSs
    *
@@ -52,6 +68,21 @@ package object linalg {
                 Y: DenseMatrix[Double]): DenseMatrix[Double] = {
     val yc = Y.copy
     blas.dtrsm("L", "U", "N", "N", yc.rows, yc.cols, 1.0, A.toArray, A.rows, yc.data, yc.rows)
+    yc
+  }
+
+  /**
+   * Forwardsolve an upper-triangular linear system
+   * with multiple RHSs
+   *
+   * @param A An lower-triangular matrix
+   * @param Y A matrix with columns corresponding to RHSs
+   * @return Matrix of solutions, X, to the linear system A X = Y
+   */
+  def forwardSolve(A: DenseMatrix[Double],
+                   Y: DenseMatrix[Double]): DenseMatrix[Double] = {
+    val yc = Y.copy
+    blas.dtrsm("L", "L", "N", "N", yc.rows, yc.cols, 1.0, A.toArray, A.rows, yc.data, yc.rows)
     yc
   }
 
@@ -194,6 +225,35 @@ package object linalg {
     B
   }
 
+  /** *
+   * Solve a linear system Ax=b where A is symmetric pd using the cholesky decomp of A named L.
+   *
+   * @param L Cholesky lower triangle of A.
+   * @param b RHS of the linear system.
+   * @return x matrix which solves Ax=B.
+   */
+  def choSolve(L: DenseMatrix[Double], b: DenseVector[Double]): DenseVector[Double] = {
+    val A = lowerTriangular[Double](L)
+    val N = A.rows
+    val NRHS = 1
+    val info = new intW(0)
+    lapack.dpotrs(
+      "L", /*lower triangular*/
+      N, /*number of rows */
+      NRHS, /*number of columns of B*/
+      A.data, /* Lower triangular factor to solve with */
+      scala.math.max(1, N), /*Leading dimension of A*/
+      b.data, /*RHS of solve, overwrites as solution.*/
+      scala.math.max(1, N), /*Leading dimension of B*/
+      info
+    )
+    assert(info.`val` >= 0)
+
+    if (info.`val` > 0)
+      throw new NotConvergedException(NotConvergedException.Iterations)
+    b
+  }
+
   /**
    * Obtain the null space of a constraint matrix.
    *
@@ -238,10 +298,33 @@ package object linalg {
 
   /**
    * Retrn the one norm of a matrix.
+   *
    * @param X Dense Matrix
    * @return Infinity norm of matrix X.
    */
   def oneNorm(X: DenseMatrix[Double]): Double = {
     max(sum(abs(X), Axis._0))
+  }
+
+  /**
+   * Calculate the log determinant of A from cholesky decomposition where A = LLt
+   *
+   * @param L Lower decomposition of A.
+   * @return
+   */
+  def detFromChol(L: DenseMatrix[Double]): Double = {
+    2.0 * sum(log(diag(L)))
+  }
+
+  /**
+   * Inplace turn lower/upper matrix into symmetric matrix.
+   *
+   * @param L Upper or lower triangular matrix.
+   * @return
+   */
+  def symFromUPLO(L: DenseMatrix[Double]): DenseMatrix[Double] = {
+    L :+= L.t
+    diag(L) :*= 0.5
+    L
   }
 }
