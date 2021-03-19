@@ -2,7 +2,6 @@ package fda
 package basis
 
 import breeze.linalg.{DenseMatrix, DenseVector}
-import breeze.numerics.abs
 import fda.math.linalg.allClose
 import org.scalatest.FunSuite
 
