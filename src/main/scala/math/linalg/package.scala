@@ -1,7 +1,7 @@
 package fda
 package math
 
-import breeze.linalg.{DenseMatrix, DenseVector, NotConvergedException, diag, isClose, kron, lowerTriangular, qr, sum, svd}
+import breeze.linalg.{Axis, DenseMatrix, DenseVector, NotConvergedException, diag, isClose, kron, lowerTriangular, max, qr, sum, svd}
 import breeze.numerics.abs
 import breeze.stats.mean
 import org.netlib.util.intW
@@ -225,5 +225,23 @@ package object linalg {
       }
     }
     res
+  }
+
+  /**
+   * Retrn the infinity norm of a matrix.
+   * @param X Dense Matrix
+   * @return Infinity norm of matrix X.
+   */
+  def infNorm(X: DenseMatrix[Double]): Double = {
+    max(sum(abs(X), Axis._1))
+  }
+
+  /**
+   * Retrn the one norm of a matrix.
+   * @param X Dense Matrix
+   * @return Infinity norm of matrix X.
+   */
+  def oneNorm(X: DenseMatrix[Double]): Double = {
+    max(sum(abs(X), Axis._0))
   }
 }
