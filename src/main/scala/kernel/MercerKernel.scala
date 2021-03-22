@@ -17,6 +17,8 @@ trait MercerKernel {
    */
   def k(x: DenseVector[Double], y: DenseVector[Double]): Double
 
+  def gk(x: DenseVector[Double], y: DenseVector[Double]): DenseVector[Double]
+
 
   /**
    * Calculate the lower Kernel matrix for collection X with itself
@@ -38,6 +40,34 @@ trait MercerKernel {
       }
     }
     L
+  }
+
+  /**
+   * Calculate the lower Gradient Kernel matrix for collection X with itself
+   *
+   * @param X Collection of points in DenseMatrix.
+   * @return Lower triangle of symmetric kernel matrix.
+   */
+  def GK(X: DenseMatrix[Double]): List[DenseMatrix[Double]] = {
+    val p = hyperParameters.length
+    val n = X.rows
+    val lL = List.fill(p)(DenseMatrix.zeros[Double](n, n))
+    cfor(0)(_ < n, _ + 1) {
+      i => {
+        val xi = X(i, ::).t
+        cfor(0)(_ < i + 1, _ + 1) {
+          j => {
+            val grad = gk(xi, X(j, ::).t)
+            cfor(0)(_ < p, _ + 1) {
+              k => {
+                lL(k)(i, j) = grad(k)
+              }
+            }
+          }
+        }
+      }
+    }
+    lL
   }
 
   /**
@@ -64,7 +94,7 @@ trait MercerKernel {
   }
 
   /**
-   * Calculate Alpha and cholesky decompsoition of Ky and log determinant of noiseless kernel.
+   * Calculate Alpha and cholesky decomposition of Ky and log determinant of noiseless kernel.
    *
    * @param y Response
    * @param X Predictors
@@ -73,10 +103,10 @@ trait MercerKernel {
   def calculateAlphaAndLAndlDet(y: DenseVector[Double], X: DenseMatrix[Double]): (DenseMatrix[Double], DenseVector[Double], Double)
 
   /**
-   * Calculate Alpha and cholesky decompsoition of Ky and log determinant of noisy kernel.
+   * Calculate Alpha and cholesky decomposition of Ky and log determinant of noisy kernel.
    *
    * @param y     Response
-   * @param noise Noise value to add to diagional.
+   * @param noise Noise value to add to diagonal.
    * @param X     Predictors
    * @return Kx^^{-1}y, and log det(Kx)
    */

@@ -288,7 +288,8 @@ package object linalg {
   }
 
   /**
-   * Retrn the infinity norm of a matrix.
+   * Return the infinity norm of a matrix.
+   *
    * @param X Dense Matrix
    * @return Infinity norm of matrix X.
    */

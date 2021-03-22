@@ -10,7 +10,7 @@ import org.scalatest.FunSuite
 
 class GpTest extends FunSuite {
 
-  test("testDraw") {
+  test("testLogLikelihood") {
     val kern = Matern(2.5, 1.0, 2.5)
     val x = linspace(0.0, 10.0, 64)
     val normal01 = breeze.stats.distributions.Gaussian(0, 1)
